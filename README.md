@@ -18,7 +18,6 @@ By the end of the project, my overall goal is to have:
 1: Project setup and CLI framework
 Goal: Get the basic project structure and CLI parsing working
 Tasks:
-
     - [x] Create new rust project
     - [x] dependencies: clap (CLI parsing), serde (serialization), ~~chrono~~ time (timestamps)
     - [ ] CLI structure with subcommands for different sensor types
@@ -30,7 +29,6 @@ outcome: CLI that accepts arguments but doesn't generate data yet
 2: Core Data Structures & Temperature Sensor
 Goal: Build foundational data types and implement first sensor
 Tasks:
-
     - [ ] sensor reading data structures (timestamp, sensor_id, value, metadata)
     - [ ] implement temperature sensor with realistic parameters (base temp, daily variation, noise)
     - [ ] Add basic random number generation (seeds for repeatability)
@@ -41,7 +39,6 @@ outcome: CLI that generates temperature readings and prints to console
 3: Multiple Sensor Types & Realistic Patterns
 Goal: Add humidity, pressure sensors with realistic correlations
 Tasks:
-
     - [ ] Implement humidity sensor (correlate with temperature for realism)
     - [ ] Add pressure sensor
     - [ ] Implement motion sensor (binary on/off with realistic timing)
@@ -52,7 +49,6 @@ outcome: CLI generating multiple sensor types with realistic data patterns
 4: Output Formats - JSON, CSV
 Goal: Support multiple data export formats
 Tasks:
-
     - [ ] Add JSON output format with proper serialization
     - [ ] Implement CSV output with headers and proper escaping
     - [ ] Add file output options (write to files vs. stdout)
@@ -63,7 +59,6 @@ outcome: Tool that can export data in JSON and CSV formats
 5: Database integration
 Goal: Direct database insertion capability
 Tasks:
-
     - [ ] Add sqlite dependency and database connectivity
     - [ ] Create schema for sensor readings table
     - [ ] Implement inserts
@@ -76,7 +71,6 @@ outcome: Tool that can insert data directly into SQLite database
 6: config, extra features, docs
 Goal: Make the tool flexible and production quality
 Tasks:
-
     - [ ] add configuration file support (TOML or JSON)
     - [ ] implement data validation and bounds checking
     - [ ] time range generation (historical/future data)

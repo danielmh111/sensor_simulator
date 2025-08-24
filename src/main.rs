@@ -4,19 +4,33 @@ use clap::Parser;
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
-    /// Name of the person to greet
+    /// type of sensor - dictates the type of data generated
     #[arg(short, long)]
-    name: String,
+    sensor_type: String,
 
-    /// Number of times to greet
-    #[arg(short, long, default_value_t = 1)]
-    count: u8,
+    /// interval at which data is generated in seconds
+    #[arg(short, long, default_value_t = 60)]
+    interval: u16,
+
+    /// duration for which readings are generated in seconds
+    #[arg(short, long, default_value_t = 300)]
+    duration: u32,
+
+    /// number of readings that are generated. Should only be used with either interval or duration, but not both.
+    #[arg(short, long)]
+    number: u16,
+
+    /// the symbol that should indicate the units of the data
+    #[arg(short, long)]
+    unit: String,
 }
 
 fn main() {
     let args = Args::parse();
 
-    for _ in 0..args.count {
-        println!("Hello {}!", args.name);
-    }
+    println!("sensor_type: {}", args.sensor_type);
+    println!("interval: {}", args.interval);
+    println!("duration: {}", args.duration);
+    println!("number: {}", args.number);
+    println!("unit: {}", args.unit);
 }
