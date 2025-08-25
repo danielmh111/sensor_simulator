@@ -1,4 +1,5 @@
 use clap::{Parser, Subcommand, ValueEnum};
+use std::io::Error;
 
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
@@ -8,17 +9,57 @@ struct Args {
     #[clap(subcommand)]
     sensor_type: Sensor,
 
+    #[clap(flatten)]
+    timing_args: TimingArgs,
+}
+
+#[derive(Parser, Debug)]
+struct TimingArgs {
     /// interval at which data is generated in seconds
-    #[arg(short, long, default_value_t = 60)]
-    interval: u16,
+    #[arg(short, long)]
+    interval: Option<u16>,
 
     /// duration for which readings are generated in seconds
-    #[arg(short, long, default_value_t = 300)]
-    duration: u32,
+    #[arg(short, long)]
+    duration: Option<u32>,
 
     /// number of readings that are generated. Should only be used with either interval or duration, but not both.
     #[arg(short, long)]
-    number: u16,
+    number: Option<u16>,
+}
+
+impl TimingArgs {
+    // only two out of interval, duration, and number should be specified
+    // the tird one should be inferred from the two provided
+    // it should be allowed to provide only one, and a sensible default should be set for the others.
+    fn validate(&mut self) -> Result<(), &str> {
+        let provided_interval: bool = self.interval.is_some();
+        let provided_duration: bool = self.duration.is_some();
+        let provided_number: bool = self.number.is_some();
+        let provided_args: Vec<bool> = vec![provided_interval, provided_duration, provided_number];
+        let total_provided: usize = provided_args.iter().filter(|&&i| i).count();
+
+        if total_provided == 3 {
+            return Err(
+                "only provide two options out of interval, duration, and number. The third value will be fixed by the first two.",
+            );
+        } else if total_provided == 2 {
+            return Ok(());
+        } else if total_provided == 1 {
+            if provided_interval {
+                self.duration = Some(300);
+            } else if provided_duration {
+                self.interval = Some(60);
+            } else if provided_number {
+                self.interval = Some(60);
+            } else {
+                panic!()
+            };
+            return Ok(());
+        } else {
+            panic!()
+        }
+    }
 }
 
 #[derive(Debug, Subcommand)]
@@ -62,7 +103,7 @@ fn main() {
     let args = Args::parse();
 
     println!("sensor_type: {:?}", args.sensor_type);
-    println!("interval: {}", args.interval);
-    println!("duration: {}", args.duration);
-    println!("number: {}", args.number);
+    println!("interval: {:?}", args.timing_args.interval);
+    println!("duration: {:?}", args.timing_args.duration);
+    println!("number: {:?}", args.timing_args.number);
 }
