@@ -36,19 +36,19 @@ im really not sure about `sensim` as the command name. maybe just sn? or sm?
 
 what arguements do I think need to be able to be parsed from the command line?
 
-    - what type of sensor
-    - what interval data will be generated at
-    - how long data will be generated for
-    - total duration data should be generated for
-    - how fast data should be produced
-    - write data to terminal or to file, and in what format (json, csv, datbase)
-    - historical/future periods i.e. set a time period start and end
-    - option to add a number of readings instead of a duration and sample interval (e.g. -n or --number 1000). This should be set up so that only two of duration, interval and number can be set, with the third one inferred.
-    - units
-    - maybe some actual sensors (brands, models) that can be simulated
-    - for file outputs, destination path
+- what type of sensor
+- what interval data will be generated at
+- how long data will be generated for
+- total duration data should be generated for
+- how fast data should be produced
+- write data to terminal or to file, and in what format (json, csv, datbase)
+- historical/future periods i.e. set a time period start and end
+- option to add a number of readings instead of a duration and sample interval (e.g. -n or --number 1000). This should be set up so that only two of duration, interval and number can be set, with the third one inferred.
+- units
+- maybe some actual sensors (brands, models) that can be simulated
+- for file outputs, destination path
 
 ### thoughts
-    - for a "realistic" temperature, we need to either have configurations for start/average value, variation, trend, ect. So for example, by default it could be room temperature that is centred around 25 degrees and has a minor flucuations with no overall upwards or downwards trends. Then, there can be ways to add day/night cycles (The center shifts from 25 to 15 and back over 24hrs). Or, we can have preset trends like exponential cooling rates (a 1000 degree object in a room fixed at 25 degrees will cool slower as object temp approaches environment temp). there has to be a good balance between useful defaults and flexibility to create scenarios. for more realistic scenarios, a json (or yaml?) config file will probably be preferable over just cli subcommands, so probably not worth worrying about for now.
-    - i should research some actual sensors and write out how they record and present data. For example, things in the house such as the environment control in dads cellar, the oven thermostat, the house thermostat, fridge thermostat, the motion light in the kitchen. Also, some more intricate systems with mulitple sensors such as the egg incubator, a combined pressure/temp gauge. Maybe an espresso machine
-    - 
+- for a "realistic" temperature, we need to either have configurations for start/average value, variation, trend, ect. So for example, by default it could be room temperature that is centred around 25 degrees and has a minor flucuations with no overall upwards or downwards trends. Then, there can be ways to add day/night cycles (The center shifts from 25 to 15 and back over 24hrs). Or, we can have preset trends like exponential cooling rates (a 1000 degree object in a room fixed at 25 degrees will cool slower as object temp approaches environment temp). there has to be a good balance between useful defaults and flexibility to create scenarios. for more realistic scenarios, a json (or yaml?) config file will probably be preferable over just cli subcommands, so probably not worth worrying about for now.
+- i should research some actual sensors and write out how they record and present data. For example, things in the house such as the environment control in dads cellar, the oven thermostat, the house thermostat, fridge thermostat, the motion light in the kitchen. Also, some more intricate systems with mulitple sensors such as the egg incubator, a combined pressure/temp gauge. Maybe an espresso machine
+- 

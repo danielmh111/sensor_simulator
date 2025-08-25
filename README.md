@@ -20,7 +20,7 @@ Goal: Get the basic project structure and CLI parsing working
 Tasks:
 - [x] Create new rust project
 - [x] dependencies: clap (CLI parsing), serde (serialization), ~~chrono~~ time (timestamps)
-- [ ] CLI structure with subcommands for different sensor types
+- [x] CLI structure with subcommands for different sensor types
 - [ ] help text and version information
 - [ ] Test argument parsing
 
