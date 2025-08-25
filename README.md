@@ -29,7 +29,7 @@ outcome: CLI that accepts arguments but doesn't generate data yet
 2: Core Data Structures & Temperature Sensor
 Goal: Build foundational data types and implement first sensor
 Tasks:
-- [ ] sensor reading data structures (timestamp, sensor_id, value, metadata)
+- [x] sensor reading data structures (timestamp, sensor_id, value, metadata)
 - [ ] implement temperature sensor with realistic parameters (base temp, daily variation, noise)
 - [ ] Add basic random number generation (seeds for repeatability)
 - [ ] create console output format
