@@ -21,8 +21,8 @@ Tasks:
 - [x] Create new rust project
 - [x] dependencies: clap (CLI parsing), serde (serialization), ~~chrono~~ time (timestamps)
 - [x] CLI structure with subcommands for different sensor types
-- [ ] help text and version information
-- [ ] Test argument parsing
+- [x] help text and version information
+- [x] Test argument parsing
 
 outcome: CLI that accepts arguments but doesn't generate data yet
 
