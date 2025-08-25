@@ -21,7 +21,7 @@ struct TimingArgs {
 
     /// duration for which readings are generated in seconds
     #[arg(short, long)]
-    duration: Option<u32>,
+    duration: Option<u16>,
 
     /// number of readings that are generated. Should only be used with either interval or duration, but not both.
     #[arg(short, long)]
@@ -33,31 +33,45 @@ impl TimingArgs {
     // the tird one should be inferred from the two provided
     // it should be allowed to provide only one, and a sensible default should be set for the others.
     fn validate(&mut self) -> Result<(), &str> {
-        let provided_interval: bool = self.interval.is_some();
-        let provided_duration: bool = self.duration.is_some();
-        let provided_number: bool = self.number.is_some();
-        let provided_args: Vec<bool> = vec![provided_interval, provided_duration, provided_number];
-        let total_provided: usize = provided_args.iter().filter(|&&i| i).count();
+        let provided_args = vec![self.interval, self.duration, self.number];
+        let provided_args: Vec<usize> = provided_args
+            .iter()
+            .enumerate()
+            .filter(|(_i, arg)| arg.is_some())
+            .map(|(i, _arg)| i)
+            .collect();
 
-        if total_provided == 3 {
-            return Err(
-                "only provide two options out of interval, duration, and number. The third value will be fixed by the first two.",
-            );
-        } else if total_provided == 2 {
-            return Ok(());
-        } else if total_provided == 1 {
-            if provided_interval {
+        match provided_args.as_slice() {
+            [] => {
+                return Err(
+                    "Did not provide any arguments to control the timing of data generated. Must provide at least one of: interval, duration, number.",
+                );
+            }
+            [0] => {
                 self.duration = Some(300);
-            } else if provided_duration {
+                return Ok(());
+            }
+            [1] => {
                 self.interval = Some(60);
-            } else if provided_number {
-                self.interval = Some(60);
-            } else {
-                panic!()
-            };
-            return Ok(());
-        } else {
-            panic!()
+                return Ok(());
+            }
+            [2] => {
+                self.duration = Some(300);
+                return Ok(());
+            }
+            [0, 1] => return Ok(()),
+            [1, 2] => return Ok(()),
+            [0, 2] => return Ok(()),
+            [0, 1, 2] => {
+                if self.number.unwrap() * self.interval.unwrap() == self.duration.unwrap() {
+                    return Ok(());
+                } else {
+                    return Err(
+                        "The provided timing arguments are not compatible together. It is recommended to only provide options out of interval, duration, and number. The third value will be fixed by the first two ",
+                    );
+                }
+            }
+            _ => panic!(),
         }
     }
 }
