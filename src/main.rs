@@ -1,7 +1,6 @@
 use clap::{Parser, Subcommand, ValueEnum};
-use std::io::Error;
 
-/// Simple program to greet a person
+/// a command line tool for simulating data from environmental sensors
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
@@ -48,15 +47,15 @@ impl TimingArgs {
                 );
             }
             [0] => {
-                self.duration = Some(300);
+                self.duration = Some(300); // set a sensible default - 5mins
                 return Ok(());
             }
             [1] => {
-                self.interval = Some(60);
+                self.interval = Some(60); // set a sensible default - 1min 
                 return Ok(());
             }
             [2] => {
-                self.duration = Some(300);
+                self.duration = Some(300); // set a sensible default - 5mins
                 return Ok(());
             }
             [0, 1] => return Ok(()),
@@ -78,19 +77,22 @@ impl TimingArgs {
 
 #[derive(Debug, Subcommand)]
 pub enum Sensor {
+    /// Simulate a temperature sensor
     Temperature {
-        /// unit in which data is generated
-        #[arg(short, long)]
+        /// unit in which data is generated. Choose `Celsius` or `Kelvin`
+        #[arg(short, long, ignore_case = true)]
         unit: TemperatureUnit,
     },
+    /// Simulate a pressure sensor
     Pressure {
-        /// unit in which data is generated
-        #[arg(short, long)]
+        /// unit in which data is generated. Choose `bar` or `Pascal`
+        #[arg(short, long, ignore_case = true)]
         unit: PressureUnit,
     },
+    /// Simulate a humidity sensor
     Humidity {
-        /// unit in which data is generated
-        #[arg(short, long)]
+        /// unit in which data is generated. Choose `relative` or `absolute`
+        #[arg(short, long, ignore_case = true)]
         unit: HumidityUnit,
     },
 }
@@ -114,7 +116,14 @@ pub enum HumidityUnit {
 }
 
 fn main() {
-    let args = Args::parse();
+    let mut args = Args::parse();
+
+    match args.timing_args.validate() {
+        Ok(v) => v,
+        Err(_) => panic!(
+            "the timing arguments (interval, duration, and number) are not valid. Provide two valid options"
+        ),
+    }
 
     println!("sensor_type: {:?}", args.sensor_type);
     println!("interval: {:?}", args.timing_args.interval);
