@@ -1,31 +1,35 @@
 mod args;
 
-// use std::hash::RandomState;
-
 use crate::args::{Args, HumidityUnit, PressureUnit, Sensor, TemperatureUnit, parse_and_validate};
-use time::Time;
+use rand::{self, Rng};
+use time::UtcDateTime;
 
+#[derive(Debug)]
 struct SensorOutput {
     id: String,
-    timestamp: Time,
+    timestamp: UtcDateTime,
     value: f32,
     unit: Unit,
 }
 
+#[derive(Clone, Debug)]
 pub enum Unit {
     TemperatureUnit(TemperatureUnit),
     PressureUnit(PressureUnit),
     HumidityUnit(HumidityUnit),
 }
 
+#[derive(Debug)]
 pub struct SensorID {}
 
+#[derive(Debug)]
 enum SensorType {
     Temperature(String),
     Pressure(String),
     Humidity(String),
 }
 
+#[derive(Debug)]
 struct EnvironmentalSensor {
     category: SensorType,
     id: String,
@@ -33,6 +37,22 @@ struct EnvironmentalSensor {
     outputs: Vec<SensorOutput>,
     unit: Unit,
     unit_symbol: &'static str,
+}
+
+impl EnvironmentalSensor {
+    fn generate_output(&mut self) -> SensorOutput {
+        let timestamp: UtcDateTime = time::UtcDateTime::now();
+        let value: f32 = rand::rng().random_range(10.0..30.0);
+
+        let output: SensorOutput = SensorOutput {
+            id: (self.id.clone()),
+            timestamp: (timestamp),
+            value: (value),
+            unit: (self.unit.clone()),
+        };
+
+        output
+    }
 }
 
 fn build_temp_sensor(args: Args) -> EnvironmentalSensor {
@@ -115,9 +135,12 @@ fn main() {
     println!("duration: {:?}", args.timing_args.duration);
     println!("number: {:?}", args.timing_args.number);
 
-    let sensor: EnvironmentalSensor = match args.sensor_type {
+    let mut sensor: EnvironmentalSensor = match args.sensor_type {
         Sensor::Temperature { .. } => build_temp_sensor(args),
         Sensor::Pressure { .. } => build_pressure_sensor(args),
         Sensor::Humidity { .. } => build_humidity_sensor(args),
     };
+
+    let output: SensorOutput = sensor.generate_output();
+    println!("{:?}", output);
 }
