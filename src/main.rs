@@ -1,6 +1,6 @@
 mod args;
 
-use std::hash::RandomState;
+// use std::hash::RandomState;
 
 use crate::args::{Args, HumidityUnit, PressureUnit, Sensor, TemperatureUnit, parse_and_validate};
 use time::Time;
@@ -13,54 +13,36 @@ struct SensorOutput {
 }
 
 pub enum Unit {
-    TemperatureUnit,
-    PressureUnit,
-    HumidityUnit,
+    TemperatureUnit(TemperatureUnit),
+    PressureUnit(PressureUnit),
+    HumidityUnit(HumidityUnit),
 }
 
 pub struct SensorID {}
 
-enum EnvironmentalSensor {
-    TemperatureSensor(TemperatureSensor),
-    PressureSensor(PressureSensor),
-    HumiditySensor(HumiditySensor),
+enum SensorType {
+    Temperature(String),
+    Pressure(String),
+    Humidity(String),
 }
 
-struct TemperatureSensor {
-    category: String,
+struct EnvironmentalSensor {
+    category: SensorType,
     id: String,
     random_seed: u16,
     outputs: Vec<SensorOutput>,
-    unit: TemperatureUnit,
+    unit: Unit,
     unit_symbol: char,
 }
 
-struct PressureSensor {
-    category: String,
-    id: String,
-    random_seed: u16,
-    outputs: Vec<SensorOutput>,
-    unit: PressureUnit,
-    unit_symbol: char,
-}
-
-struct HumiditySensor {
-    category: String,
-    id: String,
-    random_seed: u16,
-    outputs: Vec<SensorOutput>,
-    unit: HumidityUnit,
-    unit_symbol: char,
-}
-
-fn build_temp_sensor(args: Args) -> TemperatureSensor {
-    let temperature_sensor: TemperatureSensor = TemperatureSensor {
-        category: "temperature".to_string(),
+fn build_temp_sensor(args: Args) -> EnvironmentalSensor {
+    let temperature_sensor: EnvironmentalSensor = EnvironmentalSensor {
+        category: SensorType::Temperature("temperature".to_string()),
         id: "1".to_string(),
         random_seed: 42,
         outputs: vec![],
         unit: match &args.sensor_type {
-            Sensor::Temperature { unit } => unit.clone(),
+            Sensor::Temperature { unit } => Unit::TemperatureUnit(unit.clone()),
             _ => panic!("shouldn't be constructing a temp sensor with a pressure or humidity unit"),
         },
         unit_symbol: match &args.sensor_type {
@@ -77,11 +59,11 @@ fn build_temp_sensor(args: Args) -> TemperatureSensor {
     temperature_sensor
 }
 
-fn build_pressure_sensor(_args: Args) -> PressureSensor {
+fn build_pressure_sensor(_args: Args) -> EnvironmentalSensor {
     panic!("not implemented")
 }
 
-fn build_humidity_sensor(_args: Args) -> HumiditySensor {
+fn build_humidity_sensor(_args: Args) -> EnvironmentalSensor {
     panic!("not implemented")
 }
 
@@ -93,10 +75,9 @@ fn main() {
     println!("duration: {:?}", args.timing_args.duration);
     println!("number: {:?}", args.timing_args.number);
 
-    let sensor = match args.sensor_type {
-        Sensor::Temperature { unit } => build_temp_sensor(args),
-        Sensor::Pressure { unit } => build_pressure_sensor(args),
-        Sensor::Humidity { unit } => build_humidity_sensor(args),
-        _ => panic!("only temperature, pressure, and humidity sensors have been implemented"),
+    let sensor: EnvironmentalSensor = match args.sensor_type {
+        Sensor::Temperature { .. } => build_temp_sensor(args),
+        Sensor::Pressure { .. } => build_pressure_sensor(args),
+        Sensor::Humidity { .. } => build_humidity_sensor(args),
     };
 }
