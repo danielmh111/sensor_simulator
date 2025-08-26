@@ -32,7 +32,7 @@ struct EnvironmentalSensor {
     random_seed: u16,
     outputs: Vec<SensorOutput>,
     unit: Unit,
-    unit_symbol: char,
+    unit_symbol: &'static str,
 }
 
 fn build_temp_sensor(args: Args) -> EnvironmentalSensor {
@@ -48,10 +48,10 @@ fn build_temp_sensor(args: Args) -> EnvironmentalSensor {
         unit_symbol: match &args.sensor_type {
             Sensor::Temperature {
                 unit: TemperatureUnit::Celsius,
-            } => 'C',
+            } => "C",
             Sensor::Temperature {
                 unit: TemperatureUnit::Kelvin,
-            } => 'K',
+            } => "K",
             _ => panic!("shouldn't be constructing a temp sensor with a pressure or humidity unit"),
         },
     };
@@ -59,12 +59,52 @@ fn build_temp_sensor(args: Args) -> EnvironmentalSensor {
     temperature_sensor
 }
 
-fn build_pressure_sensor(_args: Args) -> EnvironmentalSensor {
-    panic!("not implemented")
+fn build_pressure_sensor(args: Args) -> EnvironmentalSensor {
+    let pressure_sensor: EnvironmentalSensor = EnvironmentalSensor {
+        category: SensorType::Pressure("pressure".to_string()),
+        id: "1".to_string(),
+        random_seed: 42,
+        outputs: vec![],
+        unit: match &args.sensor_type {
+            Sensor::Pressure { unit } => Unit::PressureUnit(unit.clone()),
+            _ => panic!("shouldn't be constructing a pressure sensor with a temp or humidity unit"),
+        },
+        unit_symbol: match &args.sensor_type {
+            Sensor::Pressure {
+                unit: PressureUnit::Bar,
+            } => "bar",
+            Sensor::Pressure {
+                unit: PressureUnit::Pascal,
+            } => "Pa",
+            _ => panic!("shouldn't be constructing a pressure sensor with a temp or humidity unit"),
+        },
+    };
+
+    pressure_sensor
 }
 
-fn build_humidity_sensor(_args: Args) -> EnvironmentalSensor {
-    panic!("not implemented")
+fn build_humidity_sensor(args: Args) -> EnvironmentalSensor {
+    let humidity_sensor: EnvironmentalSensor = EnvironmentalSensor {
+        category: SensorType::Humidity("humidity".to_string()),
+        id: "1".to_string(),
+        random_seed: 42,
+        outputs: vec![],
+        unit: match &args.sensor_type {
+            Sensor::Humidity { unit } => Unit::HumidityUnit(unit.clone()),
+            _ => panic!("shouldn't be constructing a humidity sensor with a pressure or temp unit"),
+        },
+        unit_symbol: match &args.sensor_type {
+            Sensor::Humidity {
+                unit: HumidityUnit::Absolute,
+            } => "g/m^3",
+            Sensor::Humidity {
+                unit: HumidityUnit::Relative,
+            } => "%",
+            _ => panic!("shouldn't be constructing a humidity sensor with a pressure or temp unit"),
+        },
+    };
+
+    humidity_sensor
 }
 
 fn main() {
