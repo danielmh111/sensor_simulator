@@ -3,6 +3,7 @@ mod args;
 use crate::args::{Args, HumidityUnit, PressureUnit, Sensor, TemperatureUnit, parse_and_validate};
 use rand::{self, Rng};
 use std::fmt;
+use std::process::Command;
 use time::UtcDateTime;
 
 #[derive(Debug)]
@@ -88,6 +89,7 @@ impl EnvironmentalSensor {
             duration = duration - time::Duration::new(interval, 0);
 
             // wait for the interval
+            std::thread::sleep(std::time::Duration::new(interval as u64, 0));
         }
     }
     fn read_out(&self) {
