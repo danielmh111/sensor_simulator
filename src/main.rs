@@ -2,6 +2,7 @@ mod args;
 
 use crate::args::{Args, HumidityUnit, PressureUnit, Sensor, TemperatureUnit, parse_and_validate};
 use rand::{self, Rng};
+use std::fmt;
 use time::UtcDateTime;
 
 #[derive(Debug)]
@@ -10,6 +11,22 @@ struct SensorOutput {
     timestamp: UtcDateTime,
     value: f32,
     unit: Unit,
+    symbol: String,
+}
+
+impl fmt::Display for SensorOutput {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "[{:02}:{:02}:{:02}] Sensor {}: {:.2}{}",
+            self.timestamp.hour(),
+            self.timestamp.minute(),
+            self.timestamp.second(),
+            self.id,
+            self.value,
+            self.symbol
+        )
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -49,6 +66,7 @@ impl EnvironmentalSensor {
             timestamp: (timestamp),
             value: (value),
             unit: (self.unit.clone()),
+            symbol: (self.unit_symbol.clone().to_string()),
         };
 
         self.outputs.push(output);
@@ -73,9 +91,9 @@ impl EnvironmentalSensor {
         }
     }
     fn read_out(&self) {
-        let mut outputs_copy = Vec::from_iter(self.outputs.iter().clone());
-        let most_recent_reading = outputs_copy.pop();
-        println!("{:?}", most_recent_reading)
+        let mut outputs_copy: Vec<&SensorOutput> = Vec::from_iter(self.outputs.iter().clone());
+        let most_recent_reading: Option<&SensorOutput> = outputs_copy.pop();
+        println!("{}", most_recent_reading.unwrap())
     }
 }
 
@@ -92,7 +110,7 @@ fn build_temp_sensor(args: Args) -> EnvironmentalSensor {
         unit_symbol: match &args.sensor_type {
             Sensor::Temperature {
                 unit: TemperatureUnit::Celsius,
-            } => "C",
+            } => "°C",
             Sensor::Temperature {
                 unit: TemperatureUnit::Kelvin,
             } => "K",
@@ -165,8 +183,8 @@ fn main() {
         Sensor::Humidity { .. } => build_humidity_sensor(args),
     };
 
-    let interval = args.timing_args.interval.unwrap().clone() as i32;
-    let duration = args.timing_args.duration.unwrap().clone() as i32;
+    let interval: i32 = args.timing_args.interval.unwrap().clone() as i32;
+    let duration: i32 = args.timing_args.duration.unwrap().clone() as i32;
 
     sensor.run_sensor(&interval, &duration);
 }
