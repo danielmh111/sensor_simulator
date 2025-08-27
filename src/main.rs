@@ -67,7 +67,7 @@ impl EnvironmentalSensor {
             timestamp: (timestamp),
             value: (value),
             unit: (self.unit.clone()),
-            symbol: (self.unit_symbol.clone().to_string()),
+            symbol: (self.unit_symbol.to_string()),
         };
 
         self.outputs.push(output);

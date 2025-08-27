@@ -32,7 +32,7 @@ Tasks:
 - [x] sensor reading data structures (timestamp, sensor_id, value, metadata)
 - [ ] implement temperature sensor with realistic parameters (base temp, daily variation, noise)
 - [ ] Add basic random number generation (seeds for repeatability)
-- [ ] create console output format
+- [x] create console output format
 
 outcome: CLI that generates temperature readings and prints to console
 
