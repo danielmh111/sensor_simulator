@@ -60,10 +60,22 @@ impl EnvironmentalSensor {
         let mut duration = time::Duration::new(duration, 0);
 
         while duration.as_seconds_f32() > 0.0 {
+            // might need to checkpoint the timestamp here and use time since this point for the interval to avoid adding time taken for the loop to run being added to the interval time - relevent for very short intervals and very long runs (will add up if set to run for a week)
+
             self.generate_output();
+
+            // call a function here that formats and prints the output - implement repr on SensorOutput?
+            self.read_out();
+
             duration = duration - time::Duration::new(interval, 0);
+
             // wait for the interval
         }
+    }
+    fn read_out(&self) {
+        let mut outputs_copy = Vec::from_iter(self.outputs.iter().clone());
+        let most_recent_reading = outputs_copy.pop();
+        println!("{:?}", most_recent_reading)
     }
 }
 
@@ -153,6 +165,8 @@ fn main() {
         Sensor::Humidity { .. } => build_humidity_sensor(args),
     };
 
-    let output: SensorOutput = sensor.generate_output();
-    println!("{:?}", output);
+    let interval = args.timing_args.interval.unwrap().clone() as i32;
+    let duration = args.timing_args.duration.unwrap().clone() as i32;
+
+    sensor.run_sensor(&interval, &duration);
 }

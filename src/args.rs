@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand, ValueEnum};
 
 /// a command line tool for simulating data from environmental sensors
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Clone, Copy)]
 #[command(version, about, long_about = None)]
 pub struct Args {
     /// type of sensor - dictates the type of data generated
@@ -12,7 +12,7 @@ pub struct Args {
     pub timing_args: TimingArgs,
 }
 
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Clone, Copy)]
 pub struct TimingArgs {
     /// interval at which data is generated in seconds
     #[arg(short, long)]
@@ -75,7 +75,7 @@ impl TimingArgs {
     }
 }
 
-#[derive(Debug, Subcommand)]
+#[derive(Debug, Subcommand, Clone, Copy)]
 pub enum Sensor {
     /// Simulate a temperature sensor
     Temperature {
@@ -97,19 +97,19 @@ pub enum Sensor {
     },
 }
 
-#[derive(Debug, Clone, ValueEnum)]
+#[derive(Debug, Clone, ValueEnum, Copy)]
 pub enum TemperatureUnit {
     Celsius,
     Kelvin,
 }
 
-#[derive(Debug, Clone, ValueEnum)]
+#[derive(Debug, Clone, ValueEnum, Copy)]
 pub enum PressureUnit {
     Pascal,
     Bar,
 }
 
-#[derive(Debug, Clone, ValueEnum)]
+#[derive(Debug, Clone, ValueEnum, Copy)]
 pub enum HumidityUnit {
     Absolute,
     Relative,
