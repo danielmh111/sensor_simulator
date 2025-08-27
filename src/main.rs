@@ -40,7 +40,7 @@ struct EnvironmentalSensor {
 }
 
 impl EnvironmentalSensor {
-    fn generate_output(&mut self) -> SensorOutput {
+    fn generate_output(&mut self) {
         let timestamp: UtcDateTime = time::UtcDateTime::now();
         let value: f32 = rand::rng().random_range(10.0..30.0);
 
@@ -51,7 +51,19 @@ impl EnvironmentalSensor {
             unit: (self.unit.clone()),
         };
 
-        output
+        self.outputs.push(output);
+    }
+    fn run_sensor(&mut self, interval: &i32, duration: &i32) {
+        let duration: i64 = *duration as i64;
+        let interval: i64 = *interval as i64;
+
+        let mut duration = time::Duration::new(duration, 0);
+
+        while duration.as_seconds_f32() > 0.0 {
+            self.generate_output();
+            duration = duration - time::Duration::new(interval, 0);
+            // wait for the interval
+        }
     }
 }
 
