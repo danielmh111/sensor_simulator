@@ -2,8 +2,8 @@ mod args;
 
 use crate::args::{Args, HumidityUnit, PressureUnit, Sensor, TemperatureUnit, parse_and_validate};
 use rand::{self, Rng};
+use rand_distr::{Distribution, Normal};
 use std::fmt;
-use std::process::Command;
 use time::UtcDateTime;
 
 #[derive(Debug)]
@@ -55,12 +55,22 @@ struct EnvironmentalSensor {
     outputs: Vec<SensorOutput>,
     unit: Unit,
     unit_symbol: &'static str,
+    base_value: f64,
+    drift_std: f64,
 }
 
 impl EnvironmentalSensor {
     fn generate_output(&mut self) {
         let timestamp: UtcDateTime = time::UtcDateTime::now();
-        let value: f32 = rand::rng().random_range(10.0..30.0);
+        // let mean = self.base_value.clone();
+        let mean: f64 = 0.0;
+        let std: f64 = self.drift_std.clone();
+
+        let change: f32 = Normal::new(mean, std).unwrap().sample(&mut rand::rng()) as f32;
+        let value: f32 = match self.outputs.last() {
+            Some(v) => v.value + change,
+            None => self.base_value as f32 + change,
+        };
 
         let output: SensorOutput = SensorOutput {
             id: (self.id.clone()),
@@ -118,6 +128,8 @@ fn build_temp_sensor(args: Args) -> EnvironmentalSensor {
             } => "K",
             _ => panic!("shouldn't be constructing a temp sensor with a pressure or humidity unit"),
         },
+        base_value: rand::rng().random_range(10.0..30.0),
+        drift_std: 0.1,
     };
 
     temperature_sensor
@@ -142,6 +154,8 @@ fn build_pressure_sensor(args: Args) -> EnvironmentalSensor {
             } => "Pa",
             _ => panic!("shouldn't be constructing a pressure sensor with a temp or humidity unit"),
         },
+        base_value: rand::rng().random_range(0.9..1.1),
+        drift_std: 0.1,
     };
 
     pressure_sensor
@@ -166,6 +180,8 @@ fn build_humidity_sensor(args: Args) -> EnvironmentalSensor {
             } => "%",
             _ => panic!("shouldn't be constructing a humidity sensor with a pressure or temp unit"),
         },
+        base_value: rand::rng().random_range(40.0..60.0),
+        drift_std: 0.3,
     };
 
     humidity_sensor
