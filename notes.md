@@ -52,3 +52,19 @@ what arguements do I think need to be able to be parsed from the command line?
 - for a "realistic" temperature, we need to either have configurations for start/average value, variation, trend, ect. So for example, by default it could be room temperature that is centred around 25 degrees and has a minor flucuations with no overall upwards or downwards trends. Then, there can be ways to add day/night cycles (The center shifts from 25 to 15 and back over 24hrs). Or, we can have preset trends like exponential cooling rates (a 1000 degree object in a room fixed at 25 degrees will cool slower as object temp approaches environment temp). there has to be a good balance between useful defaults and flexibility to create scenarios. for more realistic scenarios, a json (or yaml?) config file will probably be preferable over just cli subcommands, so probably not worth worrying about for now.
 - i should research some actual sensors and write out how they record and present data. For example, things in the house such as the environment control in dads cellar, the oven thermostat, the house thermostat, fridge thermostat, the motion light in the kitchen. Also, some more intricate systems with mulitple sensors such as the egg incubator, a combined pressure/temp gauge. Maybe an espresso machine
 - 
+
+### trends, signal, noise, seasons
+
+- the base value should not be totally random - it should probably be autocorrelated. That is, the next value is more likely to be close to the last value than far from it. We can do this by using the last value and modifying it with a value taken from a normal distribution. 
+- one step beyond this would be a value that can vary randomly, but trends to some average over time. So you can set a mean temperature over the duration, and the value will vary from one value to the next, but when the previous value is above the mean then it is more likely to decrease than increase. And also the further above the "base value" the current value is, the more likely it is to increase. Not sure how to do this - maybe combining (convolving, adding, multiplying?) curves centered arount the current value and the base value. Or is there a way of applying a skewing affect to a normal curve using the distance from the mean to the base value?
+- standard deviation can be set as struct field for the sensor - this means it can be configured when its build, allowing configuration of how noisy the readings of a sensor will be by the user at some point.
+- the standard deviation (and therefore the amount of change from one reading to the next) should probably be proportional to the interval in som e way. That way, there is going to be a similar pattern drawn through data sampled every 2 seconds for five minutes and every 20 seconds for five minutes, rather than the shorter interval sensor looking noisier because the same modifyer is applied more often and ten times more overall. 
+- maybe there should be different standard deviation defaults for different sensor types too - probably atmospheric pressure is much more stable than air temperature? 
+- We want to be able to replicate a few different trends - maybe do this by applying a trend just to the base value or mean value, allowing the noise to be seperate. 
+    - linear decrease/increase
+    - exponential decay (useful for cooling curves)
+    - step changes?
+    - day/night cycles (combining different heating and cooling rates in a cycle)
+    - weather fronts?
+    - mixes like a steady state, then at a defined point and exponential decay, then oscillation until a new steady state is reached at a lower temperature/pressure/whatever. like a curve from a PID controlled climate.
+    

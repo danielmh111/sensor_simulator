@@ -30,7 +30,7 @@ outcome: CLI that accepts arguments but doesn't generate data yet
 Goal: Build foundational data types and implement first sensor
 Tasks:
 - [x] sensor reading data structures (timestamp, sensor_id, value, metadata)
-- [ ] implement temperature sensor with realistic parameters (base temp, daily variation, noise)
+- [x] implement temperature sensor with realistic parameters (base temp, daily variation, noise)
 - [ ] Add basic random number generation (seeds for repeatability)
 - [x] create console output format
 
@@ -39,8 +39,8 @@ outcome: CLI that generates temperature readings and prints to console
 3: Multiple Sensor Types & Realistic Patterns
 Goal: Add humidity, pressure sensors with realistic correlations
 Tasks:
-- [ ] Implement humidity sensor (correlate with temperature for realism)
-- [ ] Add pressure sensor
+- [x] Implement humidity sensor (correlate with temperature for realism)
+- [x] Add pressure sensor
 - [ ] Implement motion sensor (binary on/off with realistic timing)
 - [ ] Add time-based patterns (daily cycles, yearly cycles, trending)
 
