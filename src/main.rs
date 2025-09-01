@@ -16,6 +16,7 @@ use time::UtcDateTime;
 #[derive(Debug, Serialize)]
 struct SensorOutput {
     id: String,
+    #[serde(serialize_with = "serialize_datetime")]
     timestamp: UtcDateTime,
     value: f32,
     unit: Unit,
@@ -34,6 +35,36 @@ impl fmt::Display for SensorOutput {
             self.value,
             self.symbol
         )
+    }
+}
+
+fn serialize_datetime<S>(
+    datetime: &UtcDateTime,
+    serializer: S,
+) -> core::result::Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+{
+    let mut w: Vec<u8> = Vec::new();
+
+    match write!(
+        w,
+        "{:04}-{:02}-{:02} {:02}:{:02}:{:02}",
+        datetime.year(),
+        datetime.month() as u8,
+        datetime.day(),
+        datetime.hour(),
+        datetime.minute(),
+        datetime.second(),
+    ) {
+        Ok(_) => {
+            let s = String::from_utf8(w).unwrap();
+            serializer.serialize_str(&s)
+        }
+        Err(e) => {
+            println!("error writing datetime to string: {}", e);
+            Err(serde::ser::Error::custom(e))
+        }
     }
 }
 
