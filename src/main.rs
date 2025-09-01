@@ -141,16 +141,13 @@ impl EnvironmentalSensor {
             std::thread::sleep(std::time::Duration::new(interval as u64, 0));
         }
 
-        let result = self.write_all_to_file();
-
-        result
-        // match self.write_all_to_file() {
-        //     Ok(..) => {}
-        //     _ => {
-        //         println!("error while writing sensor readings to CSV");
-        //         process::exit(1);
-        //     }
-        // }
+        match self.file_path {
+            Some(..) => {
+                self.write_all_to_file()?;
+            }
+            None => (),
+        }
+        Ok(())
     }
     fn read_out(&self) {
         let mut outputs_copy: Vec<&SensorOutput> = Vec::from_iter(self.outputs.iter().clone());
@@ -158,7 +155,9 @@ impl EnvironmentalSensor {
         println!("{}", most_recent_reading.unwrap())
     }
     fn write_all_to_file(&self) -> Result<()> {
-        let mut writer = csv::Writer::from_writer(io::stdout());
+        let mut path = self.file_path.clone().unwrap();
+        path.push_str("\\output.csv");
+        let mut writer = csv::Writer::from_path(path)?;
 
         for reading in &self.outputs {
             match writer.serialize(reading) {
