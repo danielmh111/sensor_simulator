@@ -1,7 +1,8 @@
 use clap::{Parser, Subcommand, ValueEnum};
+use serde::Serialize;
 
 /// a command line tool for simulating data from environmental sensors
-#[derive(Parser, Debug, Clone, Copy)]
+#[derive(Parser, Debug, Clone, Serialize)]
 #[command(version, about, long_about = None)]
 pub struct Args {
     /// type of sensor - dictates the type of data generated
@@ -10,9 +11,28 @@ pub struct Args {
 
     #[clap(flatten)]
     pub timing_args: TimingArgs,
+
+    #[clap(flatten)]
+    pub output_args: OutputArgs,
 }
 
-#[derive(Parser, Debug, Clone, Copy)]
+#[derive(Parser, Debug, Clone, Serialize)]
+pub struct OutputArgs {
+    /// whether or not the output should be written to a file. Defaults to false.
+    #[arg(
+        short = 'f',
+        long,
+        default_value("false"),
+        default_value_if("to_file", "true", ".")
+    )]
+    pub to_file: String,
+
+    /// whether or not the output should be written to a database. Defaults to false.
+    #[arg(short = 's', long, default_value("false"))]
+    pub to_sql: String,
+}
+
+#[derive(Parser, Debug, Clone, Copy, Serialize)]
 pub struct TimingArgs {
     /// interval at which data is generated in seconds
     #[arg(short, long)]
@@ -75,7 +95,7 @@ impl TimingArgs {
     }
 }
 
-#[derive(Debug, Subcommand, Clone, Copy)]
+#[derive(Debug, Subcommand, Clone, Copy, Serialize)]
 pub enum Sensor {
     /// Simulate a temperature sensor
     Temperature {
@@ -97,19 +117,19 @@ pub enum Sensor {
     },
 }
 
-#[derive(Debug, Clone, ValueEnum, Copy)]
+#[derive(Debug, Clone, ValueEnum, Copy, Serialize)]
 pub enum TemperatureUnit {
     Celsius,
     Kelvin,
 }
 
-#[derive(Debug, Clone, ValueEnum, Copy)]
+#[derive(Debug, Clone, ValueEnum, Copy, Serialize)]
 pub enum PressureUnit {
     Pascal,
     Bar,
 }
 
-#[derive(Debug, Clone, ValueEnum, Copy)]
+#[derive(Debug, Clone, ValueEnum, Copy, Serialize)]
 pub enum HumidityUnit {
     Absolute,
     Relative,

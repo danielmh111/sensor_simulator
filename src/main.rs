@@ -1,12 +1,19 @@
 mod args;
 
 use crate::args::{Args, HumidityUnit, PressureUnit, Sensor, TemperatureUnit, parse_and_validate};
+use csv::Writer;
 use rand::{self, Rng};
 use rand_distr::{Distribution, Normal};
+use serde::Serialize;
 use std::fmt;
+use std::fs::OpenOptions;
+use std::io;
+use std::io::Result;
+use std::io::prelude::*;
+use std::process;
 use time::UtcDateTime;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 struct SensorOutput {
     id: String,
     timestamp: UtcDateTime,
@@ -30,17 +37,17 @@ impl fmt::Display for SensorOutput {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
 pub enum Unit {
     TemperatureUnit(TemperatureUnit),
     PressureUnit(PressureUnit),
     HumidityUnit(HumidityUnit),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct SensorID {}
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 enum SensorType {
     Temperature(String),
     Pressure(String),
@@ -57,6 +64,7 @@ struct EnvironmentalSensor {
     unit_symbol: &'static str,
     base_value: f64,
     drift_std: f64,
+    file_path: Option<String>,
 }
 
 impl EnvironmentalSensor {
@@ -82,7 +90,7 @@ impl EnvironmentalSensor {
 
         self.outputs.push(output);
     }
-    fn run_sensor(&mut self, interval: &i32, duration: &i32) {
+    fn run_sensor(&mut self, interval: &i32, duration: &i32) -> Result<()> {
         let duration: i64 = *duration as i64;
         let interval: i64 = *interval as i64;
 
@@ -101,15 +109,60 @@ impl EnvironmentalSensor {
             // wait for the interval
             std::thread::sleep(std::time::Duration::new(interval as u64, 0));
         }
+
+        let result = self.write_all_to_file();
+
+        result
+        // match self.write_all_to_file() {
+        //     Ok(..) => {}
+        //     _ => {
+        //         println!("error while writing sensor readings to CSV");
+        //         process::exit(1);
+        //     }
+        // }
     }
     fn read_out(&self) {
         let mut outputs_copy: Vec<&SensorOutput> = Vec::from_iter(self.outputs.iter().clone());
         let most_recent_reading: Option<&SensorOutput> = outputs_copy.pop();
         println!("{}", most_recent_reading.unwrap())
     }
+    fn write_all_to_file(&self) -> Result<()> {
+        let mut writer = csv::Writer::from_writer(io::stdout());
+
+        for reading in &self.outputs {
+            match writer.serialize(reading) {
+                Ok(..) => (),
+                Err(e) => println!("error during csv serialization: {}", e),
+            };
+        }
+
+        writer.flush()?;
+
+        Ok(())
+    }
+    // fn append_to_file(&mut self) -> Result<()> {
+    //     let file_path = match self.file_path {
+    //         Some(f) => &f,
+    //         None => panic!("append to file has been called but no output destination has been set"),
+    //     } as &str;
+
+    //     let mut file = OpenOptions::new()
+    //         .create(true)
+    //         .write(true)
+    //         .append(true)
+    //         .open(file_path)?;
+
+    //     file.write_all(contents.as_bytes())
+    // }
 }
 
-fn build_temp_sensor(args: Args) -> EnvironmentalSensor {
+fn build_temp_sensor(args: &Args) -> EnvironmentalSensor {
+    let file_path: Option<String> = if args.output_args.to_file == "false".to_string() {
+        None
+    } else {
+        Some(args.output_args.to_file.clone())
+    };
+
     let temperature_sensor: EnvironmentalSensor = EnvironmentalSensor {
         category: SensorType::Temperature("temperature".to_string()),
         id: "1".to_string(),
@@ -130,12 +183,18 @@ fn build_temp_sensor(args: Args) -> EnvironmentalSensor {
         },
         base_value: rand::rng().random_range(10.0..30.0),
         drift_std: 0.1,
+        file_path: file_path,
     };
 
     temperature_sensor
 }
 
-fn build_pressure_sensor(args: Args) -> EnvironmentalSensor {
+fn build_pressure_sensor(args: &Args) -> EnvironmentalSensor {
+    let file_path: Option<String> = if args.output_args.to_file == "false".to_string() {
+        None
+    } else {
+        Some(args.output_args.to_file.clone())
+    };
     let pressure_sensor: EnvironmentalSensor = EnvironmentalSensor {
         category: SensorType::Pressure("pressure".to_string()),
         id: "1".to_string(),
@@ -156,12 +215,18 @@ fn build_pressure_sensor(args: Args) -> EnvironmentalSensor {
         },
         base_value: rand::rng().random_range(0.9..1.1),
         drift_std: 0.1,
+        file_path: file_path,
     };
 
     pressure_sensor
 }
 
-fn build_humidity_sensor(args: Args) -> EnvironmentalSensor {
+fn build_humidity_sensor(args: &Args) -> EnvironmentalSensor {
+    let file_path: Option<String> = if args.output_args.to_file == "false".to_string() {
+        None
+    } else {
+        Some(args.output_args.to_file.clone())
+    };
     let humidity_sensor: EnvironmentalSensor = EnvironmentalSensor {
         category: SensorType::Humidity("humidity".to_string()),
         id: "1".to_string(),
@@ -182,6 +247,7 @@ fn build_humidity_sensor(args: Args) -> EnvironmentalSensor {
         },
         base_value: rand::rng().random_range(40.0..60.0),
         drift_std: 0.3,
+        file_path: file_path,
     };
 
     humidity_sensor
@@ -195,14 +261,20 @@ fn main() {
     println!("duration: {:?}", args.timing_args.duration);
     println!("number: {:?}", args.timing_args.number);
 
-    let mut sensor: EnvironmentalSensor = match args.sensor_type {
-        Sensor::Temperature { .. } => build_temp_sensor(args),
-        Sensor::Pressure { .. } => build_pressure_sensor(args),
-        Sensor::Humidity { .. } => build_humidity_sensor(args),
+    let mut sensor: EnvironmentalSensor = match &args.sensor_type {
+        Sensor::Temperature { .. } => build_temp_sensor(&args),
+        Sensor::Pressure { .. } => build_pressure_sensor(&args),
+        Sensor::Humidity { .. } => build_humidity_sensor(&args),
     };
 
     let interval: i32 = args.timing_args.interval.unwrap().clone() as i32;
     let duration: i32 = args.timing_args.duration.unwrap().clone() as i32;
 
-    sensor.run_sensor(&interval, &duration);
+    match sensor.run_sensor(&interval, &duration) {
+        Ok(..) => println!("process complete"),
+        Err(e) => {
+            println!("an error was encountered: {}", e);
+            process::exit(1);
+        }
+    };
 }
