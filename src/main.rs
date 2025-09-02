@@ -4,7 +4,9 @@ use crate::args::{Args, HumidityUnit, PressureUnit, Sensor, TemperatureUnit, par
 use rand::{self, Rng};
 use rand_distr::{Distribution, Normal};
 use serde::Serialize;
+use serde_json;
 use std::fmt;
+use std::fs::File;
 use std::io::Result;
 use std::io::prelude::*;
 use std::process;
@@ -164,6 +166,18 @@ impl EnvironmentalSensor {
         }
 
         writer.flush()?;
+
+        Ok(())
+    }
+    fn write_all_to_json(&self) -> Result<()> {
+        let mut path: String = self.file_path.clone().unwrap();
+        path.push_str("\\output.json");
+
+        let mut file = File::create(path)?;
+
+        let outputs_json = serde_json::to_string(&self.outputs)?;
+
+        file.write_all(outputs_json.as_bytes())?;
 
         Ok(())
     }

@@ -561,6 +561,7 @@ dependencies = [
  "rand",
  "rand_distr",
  "serde",
+ "serde_json",
  "serde_with",
  "time",
 ]
