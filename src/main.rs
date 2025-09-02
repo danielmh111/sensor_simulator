@@ -1,13 +1,10 @@
 mod args;
 
 use crate::args::{Args, HumidityUnit, PressureUnit, Sensor, TemperatureUnit, parse_and_validate};
-use csv::Writer;
 use rand::{self, Rng};
 use rand_distr::{Distribution, Normal};
 use serde::Serialize;
 use std::fmt;
-use std::fs::OpenOptions;
-use std::io;
 use std::io::Result;
 use std::io::prelude::*;
 use std::process;
@@ -155,9 +152,9 @@ impl EnvironmentalSensor {
         println!("{}", most_recent_reading.unwrap())
     }
     fn write_all_to_file(&self) -> Result<()> {
-        let mut path = self.file_path.clone().unwrap();
+        let mut path: String = self.file_path.clone().unwrap();
         path.push_str("\\output.csv");
-        let mut writer = csv::Writer::from_path(path)?;
+        let mut writer: csv::Writer<std::fs::File> = csv::Writer::from_path(path)?;
 
         for reading in &self.outputs {
             match writer.serialize(reading) {

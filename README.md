@@ -31,7 +31,7 @@ Goal: Build foundational data types and implement first sensor
 Tasks:
 - [x] sensor reading data structures (timestamp, sensor_id, value, metadata)
 - [x] implement temperature sensor with realistic parameters (base temp, daily variation, noise)
-- [ ] Add basic random number generation (seeds for repeatability)
+- [x] Add basic random number generation 
 - [x] create console output format
 
 outcome: CLI that generates temperature readings and prints to console
@@ -50,8 +50,8 @@ outcome: CLI generating multiple sensor types with realistic data patterns
 Goal: Support multiple data export formats
 Tasks:
 - [ ] Add JSON output format with proper serialization
-- [ ] Implement CSV output with headers and proper escaping
-- [ ] Add file output options (write to files vs. stdout)
+- [x] Implement CSV output with headers and proper escaping
+- [x] Add file output options (specify path)
 - [ ] Implement batch generation (generate N readings at once)
 
 outcome: Tool that can export data in JSON and CSV formats
@@ -81,9 +81,11 @@ Tasks:
 - [ ] add unit tests for core functions
 - [ ] Performance optimization
 - [ ] example/template config files
+- [ ] use of seeds for repeatability
 
 
 7. maybes
 - [ ] docker image + deployment guide
 - [ ] option for adding anomilies
 - [ ] streaming data mode / set event frequency
+- [ ] write to files vs. stdout (not sure when its useful to have a file printed to the terminal?)
