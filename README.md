@@ -52,7 +52,6 @@ Tasks:
 - [ ] Add JSON output format with proper serialization
 - [x] Implement CSV output with headers and proper escaping
 - [x] Add file output options (specify path)
-- [ ] Implement batch generation (generate N readings at once)
 
 outcome: Tool that can export data in JSON and CSV formats
 
@@ -65,6 +64,15 @@ Tasks:
 - [ ] Add database connection config
 
 outcome: Tool that can insert data directly into SQLite database
+
+6: File Operations
+Goal: Add operations using csv and json files that allow for long running sensor use cases
+- [ ] Implement append-to-file during sensor generation
+- [ ] Add configurable memory management (max outputs vector size)
+- [ ] File rotation (max lines/size per file with timestamps)
+- [ ] Configuration for append vs batch modes
+- [ ] Handle file I/O errors gracefully during long runs
+- [ ] Add CSV headers to new rotated files
 
 ## Nice-to-haves
 
@@ -82,6 +90,7 @@ Tasks:
 - [ ] Performance optimization
 - [ ] example/template config files
 - [ ] use of seeds for repeatability
+- [ ] Implement batch generation (generate N readings at once)
 
 
 7. maybes

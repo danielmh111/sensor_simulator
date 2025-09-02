@@ -67,4 +67,14 @@ what arguements do I think need to be able to be parsed from the command line?
     - day/night cycles (combining different heating and cooling rates in a cycle)
     - weather fronts?
     - mixes like a steady state, then at a defined point and exponential decay, then oscillation until a new steady state is reached at a lower temperature/pressure/whatever. like a curve from a PID controlled climate.
-    
+
+
+### csv output
+
+there is a commented-out function for EnvironmentalSensor, append_to_file. I actually started writing this first before some reading where i decided to use the csv and serde crates. This meant that I thought the approach would be to format each reading and append it to a plain text file, then simply name it with a .csv extension. While i discovered that serde would allow me to serialize the entire outputs field in one go for a faster implementation of writing to csv, I can still think of some situations where appending to the file while the sensor is still running would be useful: 
+    1. in a sensor that is running for a long time (e.g. days), appending to a file would allow the outputs vector to be capped at a maximum size without historical data loss - the csv would act as an archive of sorts. 
+    2. the csv could be source data that changes in real time. An application could be that its a seed for a dbt model that refreshes on a schedule. While not a production ready solution, this could be nice for prototyping 
+    3. allows sensors to be run "indefinitly", and still have access to files. This means that partitioning the files once they reach a maximum number of lines is probably also necessary. 
+Im kinda imagining this as a precursor to putting the program in a docker image and building an api to recieve readings. So you could have it running and just read the csv intermitently to get near live data for a pipeline/reporting application. 
+
+However, now i thought about it, using a logging system with the in memory vector buffering recent readings but partitioned files used to store readings long term on disk solves a issue in the current design. If set to run for a long time, then the program would crash when it runs out of memory by filling up the outputs vector. In real life lots of sensors are expected to run for months or years reliably - although i would never do that with this project, it would be nice to be able to replicate a production-ready approach. 
