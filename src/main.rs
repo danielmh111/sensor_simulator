@@ -1,5 +1,6 @@
 mod args;
 
+use crate::args::FileFormat;
 use crate::args::{Args, HumidityUnit, PressureUnit, Sensor, TemperatureUnit, parse_and_validate};
 use rand::{self, Rng};
 use rand_distr::{Distribution, Normal};
@@ -95,6 +96,7 @@ struct EnvironmentalSensor {
     base_value: f64,
     drift_std: f64,
     file_path: Option<String>,
+    file_format: FileFormat,
 }
 
 impl EnvironmentalSensor {
@@ -120,12 +122,7 @@ impl EnvironmentalSensor {
 
         self.outputs.push(output);
     }
-    fn run_sensor(
-        &mut self,
-        interval: &i32,
-        duration: &i32,
-        output_format: Option<&str>,
-    ) -> Result<()> {
+    fn run_sensor(&mut self, interval: &i32, duration: &i32) -> Result<()> {
         let duration: i64 = *duration as i64;
         let interval: i64 = *interval as i64;
 
@@ -146,12 +143,7 @@ impl EnvironmentalSensor {
         }
 
         match self.file_path {
-            Some(..) => match output_format {
-                Some("json") => self.write_all_to_json()?,
-                Some("csv") => self.write_all_to_file()?,
-                Some(&_) => (),
-                None => (),
-            },
+            Some(..) => self.write_all_to_file()?,
             None => (),
         }
         Ok(())
@@ -162,6 +154,14 @@ impl EnvironmentalSensor {
         println!("{}", most_recent_reading.unwrap())
     }
     fn write_all_to_file(&self) -> Result<()> {
+        let result = match self.file_format {
+            args::FileFormat::CSV => self.write_all_to_csv(),
+            args::FileFormat::Json => self.write_all_to_json(),
+        };
+
+        result
+    }
+    fn write_all_to_csv(&self) -> Result<()> {
         let mut path: String = self.file_path.clone().unwrap();
         path.push_str("\\output.csv");
         let mut writer: csv::Writer<std::fs::File> = csv::Writer::from_path(path)?;
@@ -233,6 +233,7 @@ fn build_temp_sensor(args: &Args) -> EnvironmentalSensor {
         base_value: rand::rng().random_range(10.0..30.0),
         drift_std: 0.1,
         file_path: file_path,
+        file_format: args.output_args.format,
     };
 
     temperature_sensor
@@ -265,6 +266,7 @@ fn build_pressure_sensor(args: &Args) -> EnvironmentalSensor {
         base_value: rand::rng().random_range(0.9..1.1),
         drift_std: 0.1,
         file_path: file_path,
+        file_format: args.output_args.format,
     };
 
     pressure_sensor
@@ -297,6 +299,7 @@ fn build_humidity_sensor(args: &Args) -> EnvironmentalSensor {
         base_value: rand::rng().random_range(40.0..60.0),
         drift_std: 0.3,
         file_path: file_path,
+        file_format: args.output_args.format,
     };
 
     humidity_sensor
@@ -318,12 +321,8 @@ fn main() {
 
     let interval: i32 = args.timing_args.interval.unwrap().clone() as i32;
     let duration: i32 = args.timing_args.duration.unwrap().clone() as i32;
-    let file_format = match args.output_args.format {
-        args::FileFormat::CSV => Some("csv"),
-        args::FileFormat::Json => Some("json"),
-    };
 
-    match sensor.run_sensor(&interval, &duration, file_format) {
+    match sensor.run_sensor(&interval, &duration) {
         Ok(..) => println!("process complete"),
         Err(e) => {
             println!("an error was encountered: {}", e);

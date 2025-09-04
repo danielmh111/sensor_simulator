@@ -28,7 +28,7 @@ pub struct OutputArgs {
     pub to_file: String,
 
     /// which file format to use. defaults to CSV
-    #[arg(short = 'o', long, default_value_if("format", "true", "csv"))]
+    #[arg(short = 'o', long, default_value("csv"))]
     pub format: FileFormat,
 
     /// whether or not the output should be written to a database. Defaults to false.
