@@ -49,7 +49,7 @@ outcome: CLI generating multiple sensor types with realistic data patterns
 4: Output Formats - JSON, CSV
 Goal: Support multiple data export formats
 Tasks:
-- [ ] Add JSON output format with proper serialization
+- [x] Add JSON output format with proper serialization
 - [x] Implement CSV output with headers and proper escaping
 - [x] Add file output options (specify path)
 
