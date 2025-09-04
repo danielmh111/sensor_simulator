@@ -27,6 +27,10 @@ pub struct OutputArgs {
     )]
     pub to_file: String,
 
+    /// which file format to use. defaults to CSV
+    #[arg(short = 'o', long, default_value_if("format", "true", "csv"))]
+    pub format: FileFormat,
+
     /// whether or not the output should be written to a database. Defaults to false.
     #[arg(short = 's', long, default_value("false"))]
     pub to_sql: String,
@@ -133,6 +137,12 @@ pub enum PressureUnit {
 pub enum HumidityUnit {
     Absolute,
     Relative,
+}
+
+#[derive(Debug, Clone, ValueEnum, Copy, Serialize)]
+pub enum FileFormat {
+    CSV,
+    Json,
 }
 
 pub fn parse_and_validate() -> Result<Args, String> {

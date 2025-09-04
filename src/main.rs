@@ -120,7 +120,12 @@ impl EnvironmentalSensor {
 
         self.outputs.push(output);
     }
-    fn run_sensor(&mut self, interval: &i32, duration: &i32) -> Result<()> {
+    fn run_sensor(
+        &mut self,
+        interval: &i32,
+        duration: &i32,
+        output_format: Option<&str>,
+    ) -> Result<()> {
         let duration: i64 = *duration as i64;
         let interval: i64 = *interval as i64;
 
@@ -141,9 +146,12 @@ impl EnvironmentalSensor {
         }
 
         match self.file_path {
-            Some(..) => {
-                self.write_all_to_file()?;
-            }
+            Some(..) => match output_format {
+                Some("json") => self.write_all_to_json()?,
+                Some("csv") => self.write_all_to_file()?,
+                Some(&_) => (),
+                None => (),
+            },
             None => (),
         }
         Ok(())
@@ -310,8 +318,12 @@ fn main() {
 
     let interval: i32 = args.timing_args.interval.unwrap().clone() as i32;
     let duration: i32 = args.timing_args.duration.unwrap().clone() as i32;
+    let file_format = match args.output_args.format {
+        args::FileFormat::CSV => Some("csv"),
+        args::FileFormat::Json => Some("json"),
+    };
 
-    match sensor.run_sensor(&interval, &duration) {
+    match sensor.run_sensor(&interval, &duration, file_format) {
         Ok(..) => println!("process complete"),
         Err(e) => {
             println!("an error was encountered: {}", e);
