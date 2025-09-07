@@ -7,7 +7,7 @@ use rand_distr::{Distribution, Normal};
 use serde::Serialize;
 use serde_json;
 use std::fmt;
-use std::fs::File;
+use std::fs::{File, OpenOptions};
 use std::io::Result;
 use std::io::prelude::*;
 use std::process;
@@ -187,20 +187,20 @@ impl EnvironmentalSensor {
 
         Ok(())
     }
-    // fn append_to_file(&mut self) -> Result<()> {
-    //     let file_path = match self.file_path {
-    //         Some(f) => &f,
-    //         None => panic!("append to file has been called but no output destination has been set"),
-    //     } as &str;
+    fn append_to_file(&mut self) -> Result<()> {
+        let path = std::path::Path::new(self.file_path.as_ref().unwrap()).join("output.csv");
 
-    //     let mut file = OpenOptions::new()
-    //         .create(true)
-    //         .write(true)
-    //         .append(true)
-    //         .open(file_path)?;
+        let file = OpenOptions::new()
+            .create(true)
+            .write(true)
+            .append(true)
+            .open(path)?;
 
-    //     file.write_all(contents.as_bytes())
-    // }
+        let mut writer: csv::Writer<std::fs::File> = csv::Writer::from_writer(file);
+        writer.flush()?;
+
+        Ok(())
+    }
 }
 
 fn build_temp_sensor(args: &Args) -> EnvironmentalSensor {
