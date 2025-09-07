@@ -162,8 +162,7 @@ impl EnvironmentalSensor {
         result
     }
     fn write_all_to_csv(&self) -> Result<()> {
-        let mut path: String = self.file_path.clone().unwrap();
-        path.push_str("\\output.csv");
+        let path = std::path::Path::new(self.file_path.as_ref().unwrap()).join("output.csv");
         let mut writer: csv::Writer<std::fs::File> = csv::Writer::from_path(path)?;
 
         for reading in &self.outputs {
@@ -178,8 +177,7 @@ impl EnvironmentalSensor {
         Ok(())
     }
     fn write_all_to_json(&self) -> Result<()> {
-        let mut path: String = self.file_path.clone().unwrap();
-        path.push_str("\\output.json");
+        let path = std::path::Path::new(self.file_path.as_ref().unwrap()).join("output.json");
 
         let mut file = File::create(path)?;
 
