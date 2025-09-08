@@ -78,3 +78,33 @@ there is a commented-out function for EnvironmentalSensor, append_to_file. I act
 Im kinda imagining this as a precursor to putting the program in a docker image and building an api to recieve readings. So you could have it running and just read the csv intermitently to get near live data for a pipeline/reporting application. 
 
 However, now i thought about it, using a logging system with the in memory vector buffering recent readings but partitioned files used to store readings long term on disk solves a issue in the current design. If set to run for a long time, then the program would crash when it runs out of memory by filling up the outputs vector. In real life lots of sensors are expected to run for months or years reliably - although i would never do that with this project, it would be nice to be able to replicate a production-ready approach. 
+
+so next steps:  
+
+    1. how many rows per file?
+    2. is number of rows the best way to partition logs? maybe a timestamp would be better. With an interval of 1 second, there would be 86400 rows per day, which could be a sensible size for a single file. however, its a very silly partition if the interval is one hour or one day. total rows or file size in mb therefore seems a better way to partition files. otherwise i might have to come up with a complex way to dynamically calculate a partition timeframe when the program starts based on the timing args.
+    3. should we append one row every time a one is generated, or in batches? should the batches be the whole file, or chunks?
+    4. should the entire in memery vector be cleared once appended to the file?
+    5. how can we handle errors while writing to file? we can keep the readings in the vector until the file is correctly saved, then clear them. How do I check if a file has been corrupted?
+        - we have to create an atomic process for opening, appending to, and closing/saving a file 
+        - this has to happen in a way it can fail and be repeated without loosing any in memory data or the previous state of the log file
+        - ideally, this should happen asynchronously so that it doesn't block the thread and interfere with the interval of the sensor. Realistically, theres no way im doing this in this project. 
+
+an atomic transaction:
+    1. copy the existing log file.
+    2. serialize readings in the vector and append them to the csv
+    3. check the csv is safely saved
+    4. clear data from the vector
+    5. clean up the copy of the file
+
+If steps 2 or 3 fail, the copy of the file can be used to recover the existing state before the transaction began. Errors in step 1 or 5 should be handled gracefully, but an error in step four should probably crash the program, either immediately or after three retries maybe.
+
+To start with, im not going to worry about the most appropriate way to partition logs. In fact, to make sure its working while i develop i will probably go with a really low row count. 
+
+
+some problems in the first approach:
+
+- currently, the headers are being appended every time instead of only the first time
+- the same file is appended to if the process is run twice. This could be exactly the desired behaviour in some cases (stop and restart the sensor, pick up where you left off with log files). But this was actually not what i was expecting this time. I think there are two option:
+    1. The first time, if there already exists a file then either delete it first or open in write mode not append mode. 
+    2. each run should have a unique id prefix for the output file. this could be the sensor id - we then need a sensible unique code for the sensor to be generated at runtime. This would also allow the same sensor to be stopped and started and reuse the existing logs bc the id could be set with a config value

@@ -10,6 +10,7 @@ use std::fmt;
 use std::fs::{File, OpenOptions};
 use std::io::Result;
 use std::io::prelude::*;
+use std::ops::Add;
 use std::process;
 use time::UtcDateTime;
 
@@ -128,6 +129,8 @@ impl EnvironmentalSensor {
 
         let mut duration = time::Duration::new(duration, 0);
 
+        let mut counter = 0;
+
         while duration.as_seconds_f32() > 0.0 {
             // might need to checkpoint the timestamp here and use time since this point for the interval to avoid adding time taken for the loop to run being added to the interval time - relevent for very short intervals and very long runs (will add up if set to run for a week)
 
@@ -140,6 +143,12 @@ impl EnvironmentalSensor {
 
             // wait for the interval
             std::thread::sleep(std::time::Duration::new(interval as u64, 0));
+
+            counter = counter.add(1);
+
+            if counter % 25 == 0 {
+                self.append_to_file()?;
+            }
         }
 
         match self.file_path {
@@ -188,7 +197,9 @@ impl EnvironmentalSensor {
         Ok(())
     }
     fn append_to_file(&mut self) -> Result<()> {
-        let path = std::path::Path::new(self.file_path.as_ref().unwrap()).join("output.csv");
+        let mut filename = self.id.clone();
+        filename.push_str("_output.csv");
+        let path = std::path::Path::new(self.file_path.as_ref().unwrap()).join(filename);
 
         let file = OpenOptions::new()
             .create(true)
@@ -197,10 +208,23 @@ impl EnvironmentalSensor {
             .open(path)?;
 
         let mut writer: csv::Writer<std::fs::File> = csv::Writer::from_writer(file);
+
+        for reading in &self.outputs {
+            writer.serialize(reading)?;
+        }
+
         writer.flush()?;
 
         Ok(())
     }
+}
+
+fn create_id() -> String {
+    let chars = b"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    let code: String = (0..3)
+        .map(|_| chars[rand::rng().random_range(0..62)] as char)
+        .collect();
+    code
 }
 
 fn build_temp_sensor(args: &Args) -> EnvironmentalSensor {
@@ -210,9 +234,12 @@ fn build_temp_sensor(args: &Args) -> EnvironmentalSensor {
         Some(args.output_args.to_file.clone())
     };
 
+    let mut id = "TMP".to_string();
+    id.push_str(&create_id());
+
     let temperature_sensor: EnvironmentalSensor = EnvironmentalSensor {
         category: SensorType::Temperature("temperature".to_string()),
-        id: "1".to_string(),
+        id: id,
         random_seed: 42,
         outputs: vec![],
         unit: match &args.sensor_type {
@@ -243,9 +270,13 @@ fn build_pressure_sensor(args: &Args) -> EnvironmentalSensor {
     } else {
         Some(args.output_args.to_file.clone())
     };
+
+    let mut id = "PRS".to_string();
+    id.push_str(&create_id());
+
     let pressure_sensor: EnvironmentalSensor = EnvironmentalSensor {
         category: SensorType::Pressure("pressure".to_string()),
-        id: "1".to_string(),
+        id: id,
         random_seed: 42,
         outputs: vec![],
         unit: match &args.sensor_type {
@@ -276,9 +307,13 @@ fn build_humidity_sensor(args: &Args) -> EnvironmentalSensor {
     } else {
         Some(args.output_args.to_file.clone())
     };
+
+    let mut id = "HMD".to_string();
+    id.push_str(&create_id());
+
     let humidity_sensor: EnvironmentalSensor = EnvironmentalSensor {
         category: SensorType::Humidity("humidity".to_string()),
-        id: "1".to_string(),
+        id: id,
         random_seed: 42,
         outputs: vec![],
         unit: match &args.sensor_type {
