@@ -67,7 +67,7 @@ outcome: Tool that can insert data directly into SQLite database
 
 6: File Operations
 Goal: Add operations using csv and json files that allow for long running sensor use cases
-- [ ] Implement append-to-file during sensor generation
+- [x] Implement append-to-file during sensor generation
 - [ ] Add configurable memory management (max outputs vector size)
 - [ ] File rotation (max lines/size per file with timestamps)
 - [ ] Configuration for append vs batch modes

@@ -108,3 +108,6 @@ some problems in the first approach:
 - the same file is appended to if the process is run twice. This could be exactly the desired behaviour in some cases (stop and restart the sensor, pick up where you left off with log files). But this was actually not what i was expecting this time. I think there are two option:
     1. The first time, if there already exists a file then either delete it first or open in write mode not append mode. 
     2. each run should have a unique id prefix for the output file. this could be the sensor id - we then need a sensible unique code for the sensor to be generated at runtime. This would also allow the same sensor to be stopped and started and reuse the existing logs bc the id could be set with a config value
+
+
+im using a counter variable to track when to append a batch of readings to the file. This seems really clunky, but i thought that computing the length of the vector directly each loop would be expensive. Im also not sure what the implications of adding an if statement to every loop are. Since we are already doing a timestamp comparison on each loop, would a time based partition actually make more sense from an efficiency point of view? 
