@@ -111,3 +111,6 @@ some problems in the first approach:
 
 
 im using a counter variable to track when to append a batch of readings to the file. This seems really clunky, but i thought that computing the length of the vector directly each loop would be expensive. Im also not sure what the implications of adding an if statement to every loop are. Since we are already doing a timestamp comparison on each loop, would a time based partition actually make more sense from an efficiency point of view? 
+
+
+learned something - the length of the vector is stored as part of the vector data structure in rust. This makes my counter variable completely redundant. 

@@ -129,8 +129,6 @@ impl EnvironmentalSensor {
 
         let mut duration = time::Duration::new(duration, 0);
 
-        let mut counter = 0;
-
         while duration.as_seconds_f32() > 0.0 {
             // might need to checkpoint the timestamp here and use time since this point for the interval to avoid adding time taken for the loop to run being added to the interval time - relevent for very short intervals and very long runs (will add up if set to run for a week)
 
@@ -144,9 +142,7 @@ impl EnvironmentalSensor {
             // wait for the interval
             std::thread::sleep(std::time::Duration::new(interval as u64, 0));
 
-            counter = counter.add(1);
-
-            if counter % 25 == 0 {
+            if self.outputs.len() % 25 == 0 {
                 self.append_to_file()?;
             }
         }
