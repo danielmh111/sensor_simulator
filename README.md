@@ -71,7 +71,7 @@ Goal: Add operations using csv and json files that allow for long running sensor
 - [ ] Add configurable memory management (max outputs vector size)
 - [ ] File rotation (max lines/size per file with timestamps)
 - [ ] Configuration for append vs batch modes
-- [ ] Handle file I/O errors gracefully during long runs
+- [x] Handle file I/O errors gracefully during long runs
 - [ ] Add CSV headers to new rotated files
 
 ## Nice-to-haves

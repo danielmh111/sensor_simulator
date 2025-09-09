@@ -202,7 +202,13 @@ impl EnvironmentalSensor {
             .append(true)
             .open(path)?;
 
-        let mut writer: csv::Writer<std::fs::File> = csv::Writer::from_writer(file);
+        let mut writer: csv::Writer<std::fs::File> = if file.metadata()?.len() > 0 {
+            csv::WriterBuilder::new()
+                .has_headers(false)
+                .from_writer(file)
+        } else {
+            csv::Writer::from_writer(file)
+        };
 
         for reading in &self.outputs {
             writer.serialize(reading)?;

@@ -81,16 +81,17 @@ However, now i thought about it, using a logging system with the in memory vecto
 
 so next steps:  
 
-    1. how many rows per file?
-    2. is number of rows the best way to partition logs? maybe a timestamp would be better. With an interval of 1 second, there would be 86400 rows per day, which could be a sensible size for a single file. however, its a very silly partition if the interval is one hour or one day. total rows or file size in mb therefore seems a better way to partition files. otherwise i might have to come up with a complex way to dynamically calculate a partition timeframe when the program starts based on the timing args.
-    3. should we append one row every time a one is generated, or in batches? should the batches be the whole file, or chunks?
-    4. should the entire in memery vector be cleared once appended to the file?
-    5. how can we handle errors while writing to file? we can keep the readings in the vector until the file is correctly saved, then clear them. How do I check if a file has been corrupted?
-        - we have to create an atomic process for opening, appending to, and closing/saving a file 
-        - this has to happen in a way it can fail and be repeated without loosing any in memory data or the previous state of the log file
-        - ideally, this should happen asynchronously so that it doesn't block the thread and interfere with the interval of the sensor. Realistically, theres no way im doing this in this project. 
+1. how many rows per file?
+2. is number of rows the best way to partition logs? maybe a timestamp would be better. With an interval of 1 second, there would be 86400 rows per day, which could be a sensible size for a single file. however, its a very silly partition if the interval is one hour or one day. total rows or file size in mb therefore seems a better way to partition files. otherwise i might have to come up with a complex way to dynamically calculate a partition timeframe when the program starts based on the timing args.
+3. should we append one row every time a one is generated, or in batches? should the batches be the whole file, or chunks?
+4. should the entire in memery vector be cleared once appended to the file?
+5. how can we handle errors while writing to file? we can keep the readings in the vector until the file is correctly saved, then clear them. How do I check if a file has been corrupted?
+    - we have to create an atomic process for opening, appending to, and closing/saving a file 
+    - this has to happen in a way it can fail and be repeated without loosing any in memory data or the previous state of the log file
+    - ideally, this should happen asynchronously so that it doesn't block the thread and interfere with the interval of the sensor. Realistically, theres no way im doing this in this project. 
 
 an atomic transaction:
+
     1. copy the existing log file.
     2. serialize readings in the vector and append them to the csv
     3. check the csv is safely saved
@@ -114,3 +115,18 @@ im using a counter variable to track when to append a batch of readings to the f
 
 
 learned something - the length of the vector is stored as part of the vector data structure in rust. This makes my counter variable completely redundant. 
+
+
+
+Some problems i still have (or have created): 
+
+- the headers are in the csv multiple times
+- the log is always a csv even if the specified output for the final file is json
+- the vector being emptied so the final output is incomplete. 
+
+i have some thoughts about this but haven't decided what i want the final behaviour to be - is the intent of the final output to complete the existing logs, or to deliver one total output file. if its the latter all the existing files could be read and combined into the final file - performance isn't really a concern once  the sensor has finished running.  
+
+
+
+In terms of making the ongoing logs match the specified output format, I think appending to a json file is more complex. For CSV you can just add the new lines to the end. For json, i think you would have to read the file back into memory, serialize it, combine the data, then write it back to file. So not an append at all. This might be what is making me lean towards the second approach i mentioned above - the csvs are for logging as the sensor is running, and at the end there is one output file in a specified format if requested. The idea that i might be reading lots of data back into memory, or combining several files before writing a new file makes me think i should explore some other file types that do this sort of thing more efficiently. I think parquet is very appropriate for dealing with combining partitions of logs. 
+
