@@ -10,7 +10,6 @@ use std::fmt;
 use std::fs::{File, OpenOptions};
 use std::io::Result;
 use std::io::prelude::*;
-use std::ops::Add;
 use std::process;
 use time::UtcDateTime;
 
@@ -210,6 +209,38 @@ impl EnvironmentalSensor {
         }
 
         writer.flush()?;
+
+        Ok(())
+    }
+    fn log_data(&mut self) -> Result<()> {
+        let mut filename: String = self.id.clone();
+        filename.push_str("_output.csv");
+        let path: std::path::PathBuf =
+            std::path::Path::new(self.file_path.as_ref().unwrap()).join(&filename);
+
+        let mut temp_file: String = filename.clone();
+        temp_file.push_str("temp");
+        let temp_file_path: std::path::PathBuf =
+            std::path::Path::new(self.file_path.as_ref().unwrap()).join(&temp_file);
+
+        if path.exists() {
+            std::fs::copy(&path, &temp_file_path)?;
+        }
+
+        let result = self.append_to_file();
+
+        match result {
+            Ok(..) => {
+                self.outputs.clear();
+                _ = std::fs::remove_file(temp_file_path);
+                // im letting the error be ignored here if it occurs bc the transaction is already successful and i dont want the transaction to return error once the file is written and the vector is clear - its complete.
+                // once there are partitioned logs, if this is failing often then there could be an accumulation of temp files. cant be bothered to handle that any time soon
+            }
+            Err(e) => {
+                std::fs::copy(&temp_file_path, &path)?;
+                return Err(e);
+            }
+        }
 
         Ok(())
     }
