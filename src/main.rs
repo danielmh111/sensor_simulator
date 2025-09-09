@@ -142,7 +142,7 @@ impl EnvironmentalSensor {
             std::thread::sleep(std::time::Duration::new(interval as u64, 0));
 
             if self.outputs.len() % 25 == 0 {
-                self.append_to_file()?;
+                self.log_data()?;
             }
         }
 
@@ -213,6 +213,17 @@ impl EnvironmentalSensor {
         Ok(())
     }
     fn log_data(&mut self) -> Result<()> {
+        for attempt in 0..5 {
+            match self.flush_outputs() {
+                Ok(..) => return Ok(()),
+                Err(_) if attempt < 5 => continue,
+                Err(e) => return Err(e),
+            }
+        }
+
+        Ok(())
+    }
+    fn flush_outputs(&mut self) -> Result<()> {
         let mut filename: String = self.id.clone();
         filename.push_str("_output.csv");
         let path: std::path::PathBuf =
