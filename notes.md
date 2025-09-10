@@ -130,3 +130,37 @@ i have some thoughts about this but haven't decided what i want the final behavi
 
 In terms of making the ongoing logs match the specified output format, I think appending to a json file is more complex. For CSV you can just add the new lines to the end. For json, i think you would have to read the file back into memory, serialize it, combine the data, then write it back to file. So not an append at all. This might be what is making me lean towards the second approach i mentioned above - the csvs are for logging as the sensor is running, and at the end there is one output file in a specified format if requested. The idea that i might be reading lots of data back into memory, or combining several files before writing a new file makes me think i should explore some other file types that do this sort of thing more efficiently. I think parquet is very appropriate for dealing with combining partitions of logs. 
 
+
+### interval drift
+
+i have set the program running with the minimum interval of 1 second, and the current maximum duration of 65535 seconds (largest 16 bit integer). I did this because i wanted to find out if there would be any bugs that arise when the sensor runs for a long time. 
+
+About nine hours and 45 minutes since the program started running, there were 33101 rows in the csv file. 
+In this time, if the sensor recorded the intervals perfectly there would be 35100 rows in the csv file. 
+
+I think the missing 2000 rows are because of the sum of execution time for each loop. The ratio of expected rows to actual rows suggests that each loop is taking ~60 milliseconds to run (2000 seconds /33101). 
+
+Is this a realistic computation overhead? 
+
+I think i can "fix" this by recording the timestamp as soon as the loop is entered, and then pausing the thread until one second is elapsed from then, rather than waiting one second after the logic in the loop is finished. But this isn't really a big deal, the sensor still runs very close to the correct interval and logs the data with the correct timestamp.
+
+I need to decide what the intended behaviour of the simulator is. In the real world, sensors are going to have drift due to computational overhead - so its very justifyable for me to leave this in as long as its a realistic amount of drift for a real world sensor. 
+
+
+```
+    while duration > 0.0 {
+
+        let checkpoint = now // something in rust that records the point in time, not just a timestamp
+        
+        /// stuff in loop
+
+        if checkpoint.elapsed() >= interval {
+            continue
+        }
+        else {
+            thread::sleep(Duration::new(interval) - checkpoint.elapsed() )
+        }
+
+    }
+```
+
