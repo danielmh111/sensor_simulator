@@ -164,3 +164,32 @@ I need to decide what the intended behaviour of the simulator is. In the real wo
     }
 ```
 
+### Error handling
+
+as the project grows im starting to find error handling a bit cumbersome. The thing im coming across is that im using more crates, each with their own Result and error types, and i can't put one crate's error inside another crate's Result. This limits when i can use the ? operator, which was my favourite approach while writing the functions conserned with file operations. 
+
+At the moment, i have just written out the full paths, i.e. `std::io::Result`. I also now have one boxed error so that the result can be a standard lib resutl, but the error is from the rusqlite crate.
+
+This code compiled and ran. But its now looks really verbose because of all of the path qualifications. in a way, this is actually clearer because the code documents exactly where each type comes from. But it makes the function signitures look really messy and i dont like it. I also suspect that its not a good practice to be returning different result types from functions implemented for the same struct. i think i have these options to change this:
+
+1. implement my own Result type for the sensor struc
+
+```
+// idk yet
+```
+
+so every result of a function defined  for the sensor struct will be a sensor result, and i can make the error take error types from all of the underlying crates. This feels conceptually cohesive, i like that all the functions will have this shared behaviour characteristic. But its going to be more boilerplate code in the file. 
+
+2. type alias that boxes all the errors
+
+```
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+```
+
+so then just use Result as the return type for all the functions. I can use ? to bubble up different crates errors because they all implement std::error::Error, and then they all get automatically boxed. dont know how, but it works. 
+
+i guess the drawback of this is that now every error has to be on the heap, even if its small. i think this shouldn't have any performance or memory implications while there are no errors occuring, but error handling might be a bit slower. 
+
+
+
+im going to put option 2 in place now, and look into how to do option 1 properly and then compare them again.

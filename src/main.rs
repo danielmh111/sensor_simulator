@@ -4,17 +4,19 @@ use crate::args::FileFormat;
 use crate::args::{Args, HumidityUnit, PressureUnit, Sensor, TemperatureUnit, parse_and_validate};
 use rand::{self, Rng};
 use rand_distr::{Distribution, Normal};
+use rusqlite;
 use serde::Serialize;
 use serde_json;
 use std::fmt;
 use std::fs::{File, OpenOptions};
-use std::io::Result;
 use std::io::prelude::*;
 use std::process;
 use time::UtcDateTime;
 
-const MAX_BATCHES_PER_FILE: usize = 3;
-const APPEND_BATCH_SIZE: usize = 25;
+const MAX_BATCHES_PER_FILE: usize = 10;
+const APPEND_BATCH_SIZE: usize = 250;
+
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 #[derive(Debug, Serialize)]
 struct SensorOutput {
@@ -278,6 +280,28 @@ impl EnvironmentalSensor {
         }
 
         Ok(())
+    }
+}
+
+fn setup_db() -> Result<rusqlite::Connection> {
+    let conn = rusqlite::Connection::open_in_memory()?;
+
+    let result = conn.execute(
+        "create or replace table
+            readings
+        (
+            id varchar,
+            timestamp timestamp primary key,
+            value float,
+            unit varchar,
+            symbol varchar,
+        )",
+        (),
+    );
+
+    match result {
+        Ok(..) => return Ok(conn),
+        Err(e) => return Err(Box::new(e)),
     }
 }
 
