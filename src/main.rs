@@ -286,7 +286,7 @@ impl EnvironmentalSensor {
 fn setup_db() -> Result<rusqlite::Connection> {
     let conn = rusqlite::Connection::open_in_memory()?;
 
-    let result = conn.execute(
+    let _result = conn.execute(
         "create or replace table
             readings
         (
@@ -297,12 +297,9 @@ fn setup_db() -> Result<rusqlite::Connection> {
             symbol varchar,
         )",
         (),
-    );
+    )?;
 
-    match result {
-        Ok(..) => return Ok(conn),
-        Err(e) => return Err(Box::new(e)),
-    }
+    Ok(conn)
 }
 
 fn create_id() -> String {
