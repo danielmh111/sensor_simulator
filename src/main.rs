@@ -13,6 +13,9 @@ use std::io::prelude::*;
 use std::process;
 use time::UtcDateTime;
 
+const MAX_BATCHES_PER_FILE: usize = 3;
+const APPEND_BATCH_SIZE: usize = 25;
+
 #[derive(Debug, Serialize)]
 struct SensorOutput {
     id: String,
@@ -97,6 +100,8 @@ struct EnvironmentalSensor {
     drift_std: f64,
     file_path: Option<String>,
     file_format: FileFormat,
+    current_file_partition: usize,
+    batches_in_current_file: usize,
 }
 
 impl EnvironmentalSensor {
@@ -141,7 +146,7 @@ impl EnvironmentalSensor {
             // wait for the interval
             std::thread::sleep(std::time::Duration::new(interval as u64, 0));
 
-            if self.outputs.len() % 25 == 0 {
+            if self.outputs.len() % APPEND_BATCH_SIZE == 0 {
                 self.log_data()?;
             }
         }
@@ -192,8 +197,11 @@ impl EnvironmentalSensor {
         Ok(())
     }
     fn append_to_file(&mut self) -> Result<()> {
-        let mut filename = self.id.clone();
-        filename.push_str("_output.csv");
+        let mut filename: String = self.id.clone();
+        filename.push_str("_output_");
+        filename.push_str(&self.current_file_partition.to_string().clone());
+        filename.push_str(".csv");
+
         let path = std::path::Path::new(self.file_path.as_ref().unwrap()).join(filename);
 
         let file = OpenOptions::new()
@@ -219,6 +227,13 @@ impl EnvironmentalSensor {
         Ok(())
     }
     fn log_data(&mut self) -> Result<()> {
+        // add logic for rotating files when they reach max size here
+
+        if self.batches_in_current_file == MAX_BATCHES_PER_FILE {
+            self.current_file_partition += 1;
+            self.batches_in_current_file = 0;
+        }
+
         for attempt in 0..5 {
             match self.flush_outputs() {
                 Ok(..) => return Ok(()),
@@ -231,7 +246,9 @@ impl EnvironmentalSensor {
     }
     fn flush_outputs(&mut self) -> Result<()> {
         let mut filename: String = self.id.clone();
-        filename.push_str("_output.csv");
+        filename.push_str("_output_");
+        filename.push_str(&self.current_file_partition.to_string().clone());
+        filename.push_str(".csv");
         let path: std::path::PathBuf =
             std::path::Path::new(self.file_path.as_ref().unwrap()).join(&filename);
 
@@ -248,6 +265,7 @@ impl EnvironmentalSensor {
 
         match result {
             Ok(..) => {
+                self.batches_in_current_file += 1;
                 self.outputs.clear();
                 _ = std::fs::remove_file(temp_file_path);
                 // im letting the error be ignored here if it occurs bc the transaction is already successful and i dont want the transaction to return error once the file is written and the vector is clear - its complete.
@@ -303,6 +321,8 @@ fn build_temp_sensor(args: &Args) -> EnvironmentalSensor {
         drift_std: 0.1,
         file_path: file_path,
         file_format: args.output_args.format,
+        current_file_partition: 0,
+        batches_in_current_file: 0,
     };
 
     temperature_sensor
@@ -340,6 +360,8 @@ fn build_pressure_sensor(args: &Args) -> EnvironmentalSensor {
         drift_std: 0.1,
         file_path: file_path,
         file_format: args.output_args.format,
+        current_file_partition: 0,
+        batches_in_current_file: 0,
     };
 
     pressure_sensor
@@ -377,6 +399,8 @@ fn build_humidity_sensor(args: &Args) -> EnvironmentalSensor {
         drift_std: 0.3,
         file_path: file_path,
         file_format: args.output_args.format,
+        current_file_partition: 0,
+        batches_in_current_file: 0,
     };
 
     humidity_sensor
