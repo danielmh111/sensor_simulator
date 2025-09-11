@@ -69,10 +69,10 @@ outcome: Tool that can insert data directly into SQLite database
 Goal: Add operations using csv and json files that allow for long running sensor use cases
 - [x] Implement append-to-file during sensor generation
 - [ ] Add configurable memory management (max outputs vector size)
-- [ ] File rotation (max lines/size per file with timestamps)
+- [x] File rotation (max lines/size per file with timestamps)
 - [ ] Configuration for append vs batch modes
 - [x] Handle file I/O errors gracefully during long runs
-- [ ] Add CSV headers to new rotated files
+- [x] Add CSV headers to new rotated files
 
 ## Nice-to-haves
 
