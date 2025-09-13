@@ -3,7 +3,9 @@ mod sensor;
 mod utils;
 
 use crate::args::{Sensor, parse_and_validate};
-use crate::sensor::{EnvironmentalSensor, build_humidity_sensor, build_temp_sensor, build_pressure_sensor}
+use crate::sensor::{
+    EnvironmentalSensor, build_humidity_sensor, build_pressure_sensor, build_temp_sensor,
+};
 use std::process;
 
 fn main() {

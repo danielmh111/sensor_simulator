@@ -193,3 +193,10 @@ i guess the drawback of this is that now every error has to be on the heap, even
 
 
 im going to put option 2 in place now, and look into how to do option 1 properly and then compare them again.
+
+
+### Learning stuff
+
+when i've looked up a couple of bugs, a few times the answer has been to configure the toml file to add features - "bundled" with rusqlite to include the compatible version of sqlite rather than trying to use the system version when compiling, "serde" with the time crate to try and make the timestamps compile (didn't work), "derive" with clap and serde so that i can use the derive macro on structs to implement traits.
+
+All of these I had to look up and found on stack overflow or the rust forum - i'm not sure how youre supposed to know what features to enable, and the build error messages didn't lead me to the solution. hopefully this becomes more obvious with some experience.
