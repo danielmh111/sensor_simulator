@@ -1,3 +1,5 @@
+use crate::args::{HumidityUnit, PressureUnit, TemperatureUnit};
+use crate::sensor::Unit;
 use rand::{self, Rng};
 use rusqlite;
 
@@ -20,6 +22,19 @@ pub fn setup_db() -> Result<rusqlite::Connection> {
     )?;
 
     Ok(conn)
+}
+
+pub fn serialize_unit(unit: &Unit) -> &str {
+    let unit_str = match &unit {
+        Unit::TemperatureUnit(TemperatureUnit::Celsius) => "temperature_celsius",
+        Unit::TemperatureUnit(TemperatureUnit::Kelvin) => "temperature_kelvin",
+        Unit::PressureUnit(PressureUnit::Pascal) => "pressure_pascal",
+        Unit::PressureUnit(PressureUnit::Bar) => "pressure_bar",
+        Unit::HumidityUnit(HumidityUnit::Absolute) => "humidity_absolute",
+        Unit::HumidityUnit(HumidityUnit::Relative) => "humidity_relative",
+    };
+
+    unit_str
 }
 
 pub fn create_id() -> String {

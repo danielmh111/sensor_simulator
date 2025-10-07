@@ -58,7 +58,7 @@ outcome: Tool that can export data in JSON and CSV formats
 5: Database integration
 Goal: Direct database insertion capability
 Tasks:
-- [ ] Add sqlite dependency and database connectivity
+- [x] Add sqlite dependency and database connectivity
 - [ ] Create schema for sensor readings table
 - [ ] Implement inserts
 - [ ] Add database connection config
