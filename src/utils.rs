@@ -2,6 +2,8 @@ use crate::args::{HumidityUnit, PressureUnit, TemperatureUnit};
 use crate::sensor::Unit;
 use rand::{self, Rng};
 use rusqlite;
+use std::io::prelude::*;
+use time::UtcDateTime;
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -35,6 +37,25 @@ pub fn serialize_unit(unit: &Unit) -> &str {
     };
 
     unit_str
+}
+
+pub fn serialize_timestamp(datetime: &UtcDateTime) -> Result<String> {
+    let mut w: Vec<u8> = Vec::new();
+
+    write!(
+        w,
+        "{:04}-{:02}-{:02} {:02}:{:02}:{:02}",
+        datetime.year(),
+        datetime.month() as u8,
+        datetime.day(),
+        datetime.hour(),
+        datetime.minute(),
+        datetime.second(),
+    )?;
+
+    let s = String::from_utf8(w)?;
+
+    Ok(s)
 }
 
 pub fn create_id() -> String {

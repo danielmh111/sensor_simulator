@@ -1,5 +1,5 @@
 use crate::args::{Args, FileFormat, HumidityUnit, PressureUnit, Sensor, TemperatureUnit};
-use crate::utils::{create_id, setup_db};
+use crate::utils::{create_id, serialize_timestamp, serialize_unit, setup_db};
 use csv;
 use rand::{self, Rng};
 use rand_distr::{Distribution, Normal};
@@ -101,6 +101,8 @@ pub struct EnvironmentalSensor {
     file_format: FileFormat,
     current_file_partition: usize,
     batches_in_current_file: usize,
+    to_sql: bool,
+    sql_conn: Option<rusqlite::Connection>,
 }
 
 impl EnvironmentalSensor {
@@ -139,6 +141,10 @@ impl EnvironmentalSensor {
 
             // call a function here that formats and prints the output - implement repr on SensorOutput?
             self.read_out();
+
+            if self.to_sql {
+                self.insert_to_db()?;
+            }
 
             duration = duration - time::Duration::new(interval, 0);
 
@@ -243,6 +249,25 @@ impl EnvironmentalSensor {
 
         Ok(())
     }
+    fn insert_to_db(&mut self) -> Result<()> {
+        let conn = self.sql_conn.as_mut().unwrap(); // we have to take the connection as mutable to be able to execute sql with it
+
+        let most_recent_reading: &SensorOutput = self.outputs.last().unwrap();
+
+        // let mut statement = transaction.prepare("insert into table values (?1, ?2, ?3, ?4, ?5)")?;
+        conn.execute(
+            "insert into readings values (?1, ?2, ?3, ?4, ?5)",
+            (
+                &most_recent_reading.id,
+                serialize_timestamp(&most_recent_reading.timestamp).unwrap(),
+                &most_recent_reading.value,
+                serialize_unit(&most_recent_reading.unit),
+                &most_recent_reading.symbol,
+            ),
+        )?;
+
+        Ok(())
+    }
     fn flush_outputs(&mut self) -> Result<()> {
         let mut filename: String = self.id.clone();
         filename.push_str("_output_");
@@ -287,6 +312,18 @@ pub fn build_temp_sensor(args: &Args) -> EnvironmentalSensor {
         Some(args.output_args.to_file.clone())
     };
 
+    let to_sql: bool = if args.output_args.to_file == "false".to_string() {
+        false
+    } else {
+        true
+    };
+
+    let sql_conn: Option<rusqlite::Connection> = if to_sql {
+        Some(setup_db().unwrap())
+    } else {
+        None
+    };
+
     let mut id = "TMP".to_string();
     id.push_str(&create_id());
 
@@ -314,6 +351,8 @@ pub fn build_temp_sensor(args: &Args) -> EnvironmentalSensor {
         file_format: args.output_args.format,
         current_file_partition: 0,
         batches_in_current_file: 0,
+        to_sql: to_sql,
+        sql_conn: sql_conn,
     };
 
     temperature_sensor
@@ -324,6 +363,18 @@ pub fn build_pressure_sensor(args: &Args) -> EnvironmentalSensor {
         None
     } else {
         Some(args.output_args.to_file.clone())
+    };
+
+    let to_sql: bool = if args.output_args.to_file == "false".to_string() {
+        false
+    } else {
+        true
+    };
+
+    let sql_conn: Option<rusqlite::Connection> = if to_sql {
+        Some(setup_db().unwrap())
+    } else {
+        None
     };
 
     let mut id = "PRS".to_string();
@@ -353,6 +404,8 @@ pub fn build_pressure_sensor(args: &Args) -> EnvironmentalSensor {
         file_format: args.output_args.format,
         current_file_partition: 0,
         batches_in_current_file: 0,
+        to_sql: to_sql,
+        sql_conn: sql_conn,
     };
 
     pressure_sensor
@@ -363,6 +416,18 @@ pub fn build_humidity_sensor(args: &Args) -> EnvironmentalSensor {
         None
     } else {
         Some(args.output_args.to_file.clone())
+    };
+
+    let to_sql: bool = if args.output_args.to_file == "false".to_string() {
+        false
+    } else {
+        true
+    };
+
+    let sql_conn: Option<rusqlite::Connection> = if to_sql {
+        Some(setup_db().unwrap())
+    } else {
+        None
     };
 
     let mut id = "HMD".to_string();
@@ -392,6 +457,8 @@ pub fn build_humidity_sensor(args: &Args) -> EnvironmentalSensor {
         file_format: args.output_args.format,
         current_file_partition: 0,
         batches_in_current_file: 0,
+        to_sql: to_sql,
+        sql_conn: sql_conn,
     };
 
     humidity_sensor

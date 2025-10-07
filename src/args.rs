@@ -33,7 +33,7 @@ pub struct OutputArgs {
 
     /// whether or not the output should be written to a database. Defaults to false.
     #[arg(short = 's', long, default_value("false"))]
-    pub to_sql: String,
+    pub to_sql: BooleanArg,
 }
 
 #[derive(Parser, Debug, Clone, Copy, Serialize)]
@@ -143,6 +143,12 @@ pub enum HumidityUnit {
 pub enum FileFormat {
     CSV,
     Json,
+}
+
+#[derive(Debug, Clone, ValueEnum, Copy, Serialize)]
+pub enum BooleanArg {
+    True,
+    False,
 }
 
 pub fn parse_and_validate() -> Result<Args, String> {
